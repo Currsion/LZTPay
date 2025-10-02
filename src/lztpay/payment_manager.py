@@ -1,6 +1,5 @@
 import asyncio
 from typing import Optional, Union
-from uuid import UUID, uuid4
 
 from lztpay.core import LZTClient
 from lztpay.core.models import Currency, InvoiceCreate
@@ -47,6 +46,7 @@ class PaymentManager:
 
     async def create_invoice(
         self,
+        payment_id: str,
         amount: float,
         comment: str = "",
         lifetime: int = 3600,
@@ -54,14 +54,12 @@ class PaymentManager:
         is_test: bool = False,
         additional_data: Optional[str] = None,
     ) -> dict:
-        payment_id = uuid4()
-        payment_id_str = str(payment_id)
 
         invoice_data = InvoiceCreate(
             currency=currency,
             amount=amount,
-            payment_id=payment_id_str,
-            comment=comment or f"Payment {payment_id_str[:8]}",
+            payment_id=payment_id,
+            comment=comment or f"Payment {payment_id[:8]}",
             url_success=self.url_success,
             url_callback=self.url_callback,
             merchant_id=self.merchant_id,
@@ -83,7 +81,7 @@ class PaymentManager:
 
         logger.info(
             "invoice created",
-            payment_id=payment_id_str,
+            payment_id=payment_id,
             invoice_id=invoice.invoice_id,
             amount=amount,
             is_test=is_test,
@@ -100,22 +98,22 @@ class PaymentManager:
             "is_test": is_test,
         }
 
-    async def check_payment(self, payment_id: UUID) -> Optional[dict]:
+    async def check_payment(self, payment_id: str) -> Optional[dict]:
         stored = await self.store.get(payment_id)
 
         if not stored:
             raise PaymentNotFoundError(
                 f"payment not found or expired: {payment_id}",
-                details={"payment_id": str(payment_id)},
+                details={"payment_id": payment_id},
             )
 
-        invoice = await self.client.get_invoice(payment_id=str(payment_id))
+        invoice = await self.client.get_invoice(payment_id=payment_id)
 
         if invoice.status == "paid":
             await self.store.delete(payment_id)
             logger.info(
                 "payment confirmed",
-                payment_id=str(payment_id),
+                payment_id=payment_id,
                 invoice_id=invoice.invoice_id,
                 amount=invoice.amount,
                 payer_user_id=invoice.payer_user_id,
@@ -131,13 +129,13 @@ class PaymentManager:
 
         logger.debug(
             "payment not confirmed yet",
-            payment_id=str(payment_id),
+            payment_id=payment_id,
             status=invoice.status,
         )
 
         return None
 
-    async def get_payment_info(self, payment_id: UUID) -> Optional[dict]:
+    async def get_payment_info(self, payment_id: str) -> Optional[dict]:
         return await self.store.get(payment_id)
 
     def get_stats(self) -> dict:

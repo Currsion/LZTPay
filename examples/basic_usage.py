@@ -10,9 +10,8 @@ async def main():
     MERCHANT_ID = 123456 #merchantid 
 
     async with LZTClient(token=TOKEN) as client:
-        balance = await client.get_merchant_balance(MERCHANT_ID)
-        logger.info("merchant balance", amount=balance.amount, currency=balance.currency)
-
+        balance = await client.get_balance()
+        logger.info("balance", amount=balance.amount)
         manager = PaymentManager(
             client,
             merchant_id=MERCHANT_ID,
@@ -26,6 +25,7 @@ async def main():
 
         payment = await manager.create_invoice(
             # ОБЯЗАТЕЛЬНЫЕ ПАРАМЕТРЫ
+            payment_id="unique_payment_123",  # уникальный ID платежа в вашей системе
             amount=1.0,  # сумма платежа
 
             # ОПЦИОНАЛЬНЫЕ ПАРАМЕТРЫ

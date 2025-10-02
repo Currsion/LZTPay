@@ -14,15 +14,18 @@ class LZTClient:
     BASE_URL = "https://prod-api.lzt.market"
 
     def __init__(self, token: str, timeout: int = 300):
-        self.token = token
+        self.token = token.strip()
         self.timeout = timeout
         self._client: Optional[httpx.AsyncClient] = None
 
     async def __aenter__(self) -> "LZTClient":
+        auth_header = f"Bearer {self.token}"
+        logger.debug("initializing client", token_length=len(self.token), header_length=len(auth_header))
+
         self._client = httpx.AsyncClient(
             base_url=self.BASE_URL,
             headers={
-                "Authorization": f"Bearer {self.token}",
+                "Authorization": auth_header,
                 "Content-Type": "application/json",
             },
             timeout=self.timeout,
@@ -62,10 +65,13 @@ class LZTClient:
             logger.error("network request failed", error=str(e), endpoint=endpoint)
             raise NetworkError(f"network error: {str(e)}")
 
-    async def get_merchant_balance(self, merchant_id: int) -> Balance:
-        data = await self._request("GET", f"/balance/exchange?merchant_id={merchant_id}")
+    async def get_balance(self) -> Balance:
+        data = await self._request("GET", "/balance/exchange")
         balance_data = data.get("to", {}).get("balance", {})
-        return Balance(amount=float(balance_data.get("balance", "0")), currency="rub")
+        return Balance(
+            amount=float(balance_data.get("balance", "0").replace(",", "")),
+            currency="rub"
+        )
 
     async def create_invoice(self, invoice_data: InvoiceCreate) -> Invoice:
         payload = invoice_data.model_dump(exclude_none=True)

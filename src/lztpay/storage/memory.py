@@ -1,7 +1,6 @@
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
-from uuid import UUID
+from typing import Any, Dict, Optional, Union
 
 from lztpay.logger import get_logger
 
@@ -14,9 +13,9 @@ class MemoryStore:
         self._ttl = ttl_seconds
         self._lock = asyncio.Lock()
 
-    async def put(self, payment_id: UUID, amount: float, user_id: int, **extra: Any) -> None:
+    async def put(self, payment_id: str, amount: float, user_id: int, **extra: Any) -> None:
         async with self._lock:
-            key = str(payment_id)
+            key = payment_id
             self._data[key] = {
                 "payment_id": payment_id,
                 "amount": amount,
@@ -32,9 +31,9 @@ class MemoryStore:
                 user_id=user_id,
             )
 
-    async def get(self, payment_id: UUID) -> Optional[Dict[str, Any]]:
+    async def get(self, payment_id: str) -> Optional[Dict[str, Any]]:
         async with self._lock:
-            key = str(payment_id)
+            key = payment_id
             data = self._data.get(key)
 
             if not data:
@@ -47,9 +46,9 @@ class MemoryStore:
 
             return data
 
-    async def delete(self, payment_id: UUID) -> bool:
+    async def delete(self, payment_id: str) -> bool:
         async with self._lock:
-            key = str(payment_id)
+            key = payment_id
             if key in self._data:
                 del self._data[key]
                 logger.debug("payment deleted", payment_id=key)
