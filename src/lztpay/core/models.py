@@ -1,7 +1,5 @@
-from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
-from uuid import UUID
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -20,46 +18,9 @@ class Currency(str, Enum):
     BRL = "brl"
 
 
-class TransferRequest(BaseModel):
-    user_id: int
-    amount: float = Field(gt=0)
-    comment: str
-    currency: str = "rub"
-
-
-class TransferResponse(BaseModel):
-    transaction_id: int
-    status: str
-    amount: float
-    user_id: int
-    comment: str
-
-
-class PaymentHistoryItem(BaseModel):
-    id: int
-    type: str
-    amount: float
-    user_id: Optional[int] = None
-    username: Optional[str] = None
-    comment: Optional[str] = None
-    timestamp: datetime
-
-
-class PaymentHistory(BaseModel):
-    payments: List[PaymentHistoryItem]
-    total: int
-
-
 class Balance(BaseModel):
     amount: float
     currency: str
-
-
-class PaymentStatus(BaseModel):
-    found: bool
-    amount: Optional[float] = None
-    payment_id: Optional[UUID] = None
-    user_id: Optional[int] = None
 
 
 class InvoiceCreate(BaseModel):

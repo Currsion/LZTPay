@@ -45,7 +45,7 @@ class PaymentManager:
                 pass
             logger.info("cleanup task stopped")
 
-    async def create_payment(
+    async def create_invoice(
         self,
         amount: float,
         comment: str = "",

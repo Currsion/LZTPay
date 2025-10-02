@@ -1,12 +1,11 @@
-from typing import Any, Dict, List, Optional
-from uuid import UUID
+from typing import Any, Dict, Optional
 
 import httpx
 
 from ..decorators import measure_time, retry_on_error
-from ..exceptions import APIError, AuthError, NetworkError, RateLimitError
+from ..exceptions import AuthError, NetworkError
 from ..logger import get_logger
-from .models import Balance, Invoice, InvoiceCreate, InvoiceResponse, PaymentHistory, PaymentHistoryItem
+from .models import Balance, Invoice, InvoiceCreate, InvoiceResponse
 
 logger = get_logger()
 
@@ -57,93 +56,16 @@ class LZTClient:
             if response.status_code == 401:
                 raise AuthError("invalid or expired token")
 
-            if response.status_code == 429:
-                retry_after = int(response.headers.get("Retry-After", 60))
-                raise RateLimitError(retry_after=retry_after)
-
-            if response.status_code >= 400:
-                raise APIError(
-                    f"API request failed: {response.status_code}",
-                    status_code=response.status_code,
-                    response=response.json() if response.content else None,
-                )
-
             return response.json()
 
         except httpx.RequestError as e:
             logger.error("network request failed", error=str(e), endpoint=endpoint)
             raise NetworkError(f"network error: {str(e)}")
 
-    async def get_balance(self) -> Balance:
-        data = await self._request("GET", "/balance")
-        return Balance(amount=data["balance"], currency=data.get("currency", "rub"))
-
-    async def transfer_money(
-        self,
-        user_id: int,
-        amount: float,
-        comment: str,
-        currency: str = "rub",
-    ) -> Dict[str, Any]:
-        payload = {
-            "user_id": user_id,
-            "amount": amount,
-            "comment": comment,
-            "currency": currency,
-        }
-
-        logger.info(
-            "initiating transfer",
-            user_id=user_id,
-            amount=amount,
-            comment=comment[:50],
-        )
-
-        return await self._request("POST", "/balance/transfer", json=payload)
-
-    async def get_payment_history(
-        self,
-        limit: int = 100,
-        offset: int = 0,
-        transaction_type: Optional[str] = None,
-    ) -> PaymentHistory:
-        params: Dict[str, Any] = {"limit": limit, "offset": offset}
-
-        if transaction_type:
-            params["type"] = transaction_type
-
-        data = await self._request("GET", "/me/payments", params=params)
-
-        payments = [
-            PaymentHistoryItem(
-                id=item["id"],
-                type=item["type"],
-                amount=item["amount"],
-                user_id=item.get("user_id"),
-                username=item.get("username"),
-                comment=item.get("comment"),
-                timestamp=item["timestamp"],
-            )
-            for item in data.get("payments", [])
-        ]
-
-        return PaymentHistory(payments=payments, total=data.get("total", len(payments)))
-
-    async def find_payment_by_comment(self, comment: str) -> Optional[PaymentHistoryItem]:
-        history = await self.get_payment_history(limit=50)
-
-        for payment in history.payments:
-            if payment.comment == comment:
-                logger.info(
-                    "payment found by comment",
-                    payment_id=payment.id,
-                    amount=payment.amount,
-                    comment=comment[:50],
-                )
-                return payment
-
-        logger.debug("payment not found", comment=comment[:50])
-        return None
+    async def get_merchant_balance(self, merchant_id: int) -> Balance:
+        data = await self._request("GET", f"/balance/exchange?merchant_id={merchant_id}")
+        balance_data = data.get("to", {}).get("balance", {})
+        return Balance(amount=float(balance_data.get("balance", "0")), currency="rub")
 
     async def create_invoice(self, invoice_data: InvoiceCreate) -> Invoice:
         payload = invoice_data.model_dump(exclude_none=True)
