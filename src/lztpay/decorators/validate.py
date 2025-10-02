@@ -3,8 +3,8 @@ from typing import Any, Callable, Dict
 
 from pydantic import BaseModel, ValidationError as PydanticValidationError
 
-from ..exceptions import ValidationError
-from ..logger import get_logger
+from lztpay.exceptions import ValidationError
+from lztpay.logger import get_logger
 
 logger = get_logger()
 

@@ -2,11 +2,11 @@ import asyncio
 from typing import Optional, Union
 from uuid import UUID, uuid4
 
-from .core import LZTClient
-from .core.models import Currency, InvoiceCreate
-from .exceptions import PaymentNotFoundError
-from .logger import get_logger
-from .storage import MemoryStore
+from lztpay.core import LZTClient
+from lztpay.core.models import Currency, InvoiceCreate
+from lztpay.exceptions import PaymentNotFoundError
+from lztpay.logger import get_logger
+from lztpay.storage import MemoryStore
 
 logger = get_logger()
 

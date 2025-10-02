@@ -3,8 +3,8 @@ import time
 from functools import wraps
 from typing import Any, Callable, Optional, Tuple, Type
 
-from ..exceptions import NetworkError, RateLimitError
-from ..logger import get_logger
+from lztpay.exceptions import NetworkError, RateLimitError
+from lztpay.logger import get_logger
 
 logger = get_logger()
 

@@ -2,10 +2,10 @@ from typing import Any, Dict, Optional
 
 import httpx
 
-from ..decorators import measure_time, retry_on_error
-from ..exceptions import AuthError, NetworkError
-from ..logger import get_logger
-from .models import Balance, Invoice, InvoiceCreate, InvoiceResponse
+from lztpay.decorators import measure_time, retry_on_error
+from lztpay.exceptions import AuthError, NetworkError
+from lztpay.logger import get_logger
+from lztpay.core.models import Balance, Invoice, InvoiceCreate, InvoiceResponse
 
 logger = get_logger()
 

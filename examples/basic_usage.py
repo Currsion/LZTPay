@@ -6,8 +6,8 @@ logger = get_logger()
 
 
 async def main():
-    TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzUxMiJ9.eyJzdWIiOjk1NDY2MzgsImlzcyI6Imx6dCIsImlhdCI6MTc1OTQxNjMzMywianRpIjoiODU5MDQ5Iiwic2NvcGUiOiJiYXNpYyByZWFkIHBvc3QgY29udmVyc2F0ZSBwYXltZW50IGludm9pY2UgY2hhdGJveCBtYXJrZXQiLCJleHAiOjE3NzQ5NjgzMzN9.Igh3Puhj9-KwKoqIqMvuozIn6B-18qR_xk-q7s95ESGgBZWvptdeHVMOthzJAajWdUudyC02PAMA03p3QRDJyFZvXcbb5XeJqr9rl5lABvXDrmNktES9IbG97sxt2-RK6I9eIOHw8MeJO77WLXVXb61Acv1NAlGwaq36YFcJ5v0" #токен от маркета
-    MERCHANT_ID = 1433 #merchantid 
+    TOKEN = "" #токен от маркета
+    MERCHANT_ID = 123456 #merchantid 
 
     async with LZTClient(token=TOKEN) as client:
         balance = await client.get_merchant_balance(MERCHANT_ID)
